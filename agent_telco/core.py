@@ -1,4 +1,5 @@
 """Number pool, compliant outbound SMS, rate limits and inbound routing for agents."""
+
 from __future__ import annotations
 
 import re
@@ -62,10 +63,10 @@ class Exchange:
     def __init__(self, carrier: Carrier, pool: list[str], rate: float = 1.0, burst: int = 5, clock=time.monotonic):
         self.carrier = carrier
         self.free = list(pool)
-        self.owner: dict[str, str] = {}          # number -> agent
-        self.numbers: dict[str, str] = {}        # agent -> number
+        self.owner: dict[str, str] = {}  # number -> agent
+        self.numbers: dict[str, str] = {}  # agent -> number
         self.handlers: dict[str, callable] = {}
-        self.opted_out: set[tuple[str, str]] = set()   # (agent_number, contact)
+        self.opted_out: set[tuple[str, str]] = set()  # (agent_number, contact)
         self.threads: dict[tuple[str, str], list[Message]] = defaultdict(list)
         self.buckets: dict[str, TokenBucket] = {}
         self._rate, self._burst, self._clock = rate, burst, clock

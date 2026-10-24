@@ -9,7 +9,10 @@ def demo():
     ex = Exchange(carrier, pool=["+14155550100", "+12125550101", "+13105550102"])
     num = ex.provision("booking-agent", area_code="212")
     print(f"provisioned {num} for booking-agent")
-    ex.on_inbound("booking-agent", lambda m: print(f"  [booking-agent] inbound from {m.contact}: {m.body!r} otp={ex.extract_otp(m.body)}"))
+    ex.on_inbound(
+        "booking-agent",
+        lambda m: print(f"  [booking-agent] inbound from {m.contact}: {m.body!r} otp={ex.extract_otp(m.body)}"),
+    )
     ex.send("booking-agent", "+12125559999", "Hi! Can I book a table for 2 at 7pm?")
     ex.receive(num, "+12125559999", "Yes - confirmation code 482913")
     ex.receive(num, "+12125559999", "STOP")
