@@ -47,7 +47,7 @@ Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless
 | **Growth** | $149 per month + carrier fees | 50 numbers; Per-number rate limits; Message threads export |
 | **Scale** | $599 per month + carrier fees | Unlimited numbers; Compliance reports; Priority support |
 
-To start a trial or buy a plan, email **sales@YOUR-DOMAIN.com**.
+To start a trial or buy a plan, [request access](https://github.com/eliem08/agent-telco/issues/new?title=Agent%20Telco%20trial&labels=sales).
 
 ## Licence
 
