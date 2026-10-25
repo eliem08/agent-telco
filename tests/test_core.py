@@ -54,6 +54,29 @@ class Tests(unittest.TestCase):
             self.ex.send("a", "+2", "promo", marketing=True, local_hour=22)
         self.assertEqual(len(self.ex.thread("a", "+1")), 3)
 
+    def test_stop_with_punctuation_or_extra_words_still_opts_out(self):
+        for body in ("STOP.", "Stop please", "stop!!", "Unsubscribe me"):
+            with self.subTest(body=body):
+                ex = Exchange(MockCarrier(), ["+14155550100"], clock=self.clock)
+                num = ex.provision("a")
+                ex.receive(num, "+1999", body)
+                with self.assertRaises(TelcoError):
+                    ex.send("a", "+1999", "hi")
+        ex = Exchange(MockCarrier(), ["+14155550100"], clock=self.clock)
+        num = ex.provision("a")
+        ex.receive(num, "+1999", "I will stop by later")
+        ex.send("a", "+1999", "great")  # not an opt-out
+
+    def test_bad_local_hour_cannot_dodge_quiet_hours(self):
+        self.ex.provision("a")
+        for hour in (25, -3):
+            with self.subTest(hour=hour), self.assertRaises(TelcoError):
+                self.ex.send("a", "+2", "promo", marketing=True, local_hour=hour)
+
+    def test_area_code_match_strips_the_country_prefix_not_characters(self):
+        ex = Exchange(MockCarrier(), ["+14155550100", "+11555550101"], clock=self.clock)
+        self.assertEqual(ex.provision("a", area_code="155"), "+11555550101")
+
 
 if __name__ == "__main__":
     unittest.main()

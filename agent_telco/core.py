@@ -77,7 +77,7 @@ class Exchange:
             return self.numbers[agent]
         if not self.free:
             raise TelcoError("number pool exhausted")
-        pick = next((n for n in self.free if area_code and n.lstrip("+1").startswith(area_code)), self.free[0])
+        pick = next((n for n in self.free if area_code and n.removeprefix("+1").startswith(area_code)), self.free[0])
         self.free.remove(pick)
         self.owner[pick], self.numbers[agent] = agent, pick
         self.buckets[pick] = TokenBucket(self._rate, self._burst, self._clock)
@@ -99,6 +99,8 @@ class Exchange:
             raise TelcoError(f"agent {agent!r} has no number")
         if (num, to) in self.opted_out:
             raise TelcoError(f"{to} opted out of {num}")
+        if local_hour is not None and not (isinstance(local_hour, int) and 0 <= local_hour <= 23):
+            raise TelcoError(f"local_hour must be 0-23, got {local_hour!r}")
         hour = datetime.now().hour if local_hour is None else local_hour
         if marketing and (hour >= 21 or hour < 8):
             raise TelcoError("quiet hours: marketing messages blocked 21:00-08:00")
@@ -114,7 +116,9 @@ class Exchange:
         agent = self.owner.get(to)
         msg = Message("in", to, frm, body, status="received")
         self.threads[(to, frm)].append(msg)
-        word = body.strip().lower()
+        # carriers honour "STOP.", "Stop please", "stop!!" - match the keyword, not the exact body
+        words = re.findall(r"[a-z]+", body.lower())
+        word = words[0] if words else ""
         if word in STOP_WORDS:
             self.opted_out.add((to, frm))
             self.carrier.send_sms(to, frm, "You are unsubscribed. Reply START to resubscribe.")
