@@ -1,15 +1,43 @@
-# agent-telco
+<!-- sell-kit:start -->
+# Agent Telco
 
 [![CI](https://github.com/eliem08/agent-telco/actions/workflows/ci.yml/badge.svg)](https://github.com/eliem08/agent-telco/actions/workflows/ci.yml)
 
-> **Twilio for agents** — phone numbers and texting for agents.
+> **Phone numbers and compliant texting for AI agents.**
 
-Agents need to receive 2FA codes, text customers back, confirm a booking with
-a restaurant. Giving every agent a real, compliant phone identity is fiddly:
-number pools, opt-outs, rate limits, routing inbound texts to the right agent.
-`agent-telco` is that layer, with a pluggable carrier backend.
+**Who it's for:** Developers building agents that need to send and receive SMS.
 
-## What the MVP does
+**The problem:** Giving agents a phone number means handling opt-outs, quiet hours, rate limits and routing replies, and getting any of it wrong breaks the law.
+
+**What you get:** A number pool, compliant outbound SMS (STOP handling, quiet hours, rate limits), inbound routing to the right agent and OTP extraction.
+
+## Quickstart
+
+Customers receive a release archive with the wheel and the examples. Python 3.10+ and no other dependencies.
+
+```bash
+pip install agent_telco-0.1.0-py3-none-any.whl
+agent-telco demo
+```
+
+## Pricing
+
+Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless noted.
+
+| Plan | Price | Includes |
+|---|---|---|
+| **Starter** | $29 per month + carrier fees | 5 numbers; Opt-out and quiet-hours compliance; Inbound routing |
+| **Growth** | $149 per month + carrier fees | 50 numbers; Per-number rate limits; Message threads export |
+| **Scale** | $599 per month + carrier fees | Unlimited numbers; Compliance reports; Priority support |
+
+To start a trial or buy a plan, email **sales@YOUR-DOMAIN.com**.
+
+## Licence
+
+Proprietary. Copyright (c) 2026 eliem08. All rights reserved. Use requires a paid plan or an active trial; see [LICENSE](LICENSE).
+<!-- sell-kit:end -->
+
+## What it does
 
 - **Number provisioning** from a pool, by preferred area code; release back to the pool
 - **Outbound SMS** through a `Carrier` interface (`MockCarrier` ships; plug in

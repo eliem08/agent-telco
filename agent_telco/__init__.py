@@ -1,4 +1,4 @@
-"""Twilio for agents: phone numbers and texting for agents."""
+"""Agent Telco: Phone numbers and compliant texting for AI agents."""
 
 from .core import *
 
