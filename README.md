@@ -17,8 +17,22 @@ Customers receive a release archive with the wheel and the examples. Python 3.10
 
 ```bash
 pip install agent_telco-0.1.0-py3-none-any.whl
+agent-telco inbound --body "STOP please"
+agent-telco send-check --body "Sale today" --marketing --local-hour 22
 agent-telco demo
 ```
+
+## Web app and API
+
+Every command is also a JSON API endpoint and a browser form, served by the built-in web app.
+
+```bash
+agent-telco-web --port 8000          # then open http://127.0.0.1:8000
+docker build -t agent-telco . && docker run -p 8000:8000 -v agent-telco-data:/data agent-telco
+```
+
+Endpoints: `POST /api/demo`, `POST /api/inbound`, `POST /api/send-check`, plus `GET /healthz` and `GET /api/spec` (machine-readable field list).
+Files are sent as `{"name": ..., "content": ...}`, folders as `{"files": [...]}` or a base64 zip.
 
 ## Pricing
 

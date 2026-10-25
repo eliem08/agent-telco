@@ -23,6 +23,7 @@ dev = ["ruff>=0.6"]
 
 [project.scripts]
 agent-telco = "agent_telco.__main__:main"
+agent-telco-web = "agent_telco.web:main"
 
 [project.urls]
 Repository = "https://github.com/eliem08/agent-telco"

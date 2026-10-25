@@ -1,0 +1,20 @@
+[
+ {
+  "op": "inbound",
+  "payload": {
+   "body": "STOP please"
+  }
+ },
+ {
+  "op": "send-check",
+  "payload": {
+   "body": "Sale today",
+   "marketing": true,
+   "local_hour": 22
+  }
+ },
+ {
+  "op": "demo",
+  "payload": {}
+ }
+]
