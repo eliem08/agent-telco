@@ -1,5 +1,44 @@
 [
  {
+  "op": "number-add",
+  "payload": {
+   "number": "+14155550100"
+  }
+ },
+ {
+  "op": "provision",
+  "payload": {
+   "agent": "booking-agent"
+  }
+ },
+ {
+  "op": "send",
+  "payload": {
+   "agent": "booking-agent",
+   "to": "+12125559999",
+   "body": "Can I book a table for 2 at 7pm?"
+  }
+ },
+ {
+  "op": "receive",
+  "payload": {
+   "to": "+14155550100",
+   "frm": "+12125559999",
+   "body": "Yes, code 482913"
+  }
+ },
+ {
+  "op": "thread",
+  "payload": {
+   "agent": "booking-agent",
+   "contact": "+12125559999"
+  }
+ },
+ {
+  "op": "numbers",
+  "payload": {}
+ },
+ {
   "op": "inbound",
   "payload": {
    "body": "STOP please"

@@ -17,9 +17,9 @@ Customers receive a release archive with the wheel and the examples. Python 3.10
 
 ```bash
 pip install agent_telco-0.1.0-py3-none-any.whl
-agent-telco inbound --body "STOP please"
-agent-telco send-check --body "Sale today" --marketing --local-hour 22
-agent-telco demo
+agent-telco number-add +14155550100 --store telco.json
+agent-telco provision booking-agent --store telco.json
+agent-telco send booking-agent +12125559999 --body "Can I book a table for 2 at 7pm?" --store telco.json
 ```
 
 ## Web app and API
@@ -34,7 +34,7 @@ docker build -t agent-telco . && docker run -p 8000:8000 -e API_KEYS=sk_... -v a
 
 Every API call needs `Authorization: Bearer <key>` once any key exists; a server on a public address refuses to start without one. Calls are rate-limited per key (60/min, `--rate`) and metered: `agent-telco-web usage` prints calls per key for billing.
 
-Endpoints: `POST /api/demo`, `POST /api/inbound`, `POST /api/send-check`, plus `GET /healthz` and `GET /api/spec` (machine-readable field list).
+Endpoints: `POST /api/demo`, `POST /api/inbound`, `POST /api/send-check`, `POST /api/number-add`, `POST /api/provision`, `POST /api/release`, `POST /api/numbers`, `POST /api/send`, `POST /api/receive`, `POST /api/thread`, plus `GET /healthz` and `GET /api/spec` (machine-readable field list).
 Files are sent as `{"name": ..., "content": ...}`, folders as `{"files": [...]}` or a base64 zip.
 
 ## Deploy and sell
