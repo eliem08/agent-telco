@@ -76,8 +76,8 @@ Proprietary. Copyright (c) 2026 eliem08. All rights reserved. Use requires a pai
 ## What it does
 
 - **Number provisioning** from a pool, by preferred area code; release back to the pool
-- **Outbound SMS** through a `Carrier` interface (`MockCarrier` ships; plug in
-  Twilio / Telnyx / Bandwidth adapters)
+- **Outbound SMS** through a `Carrier` interface: Twilio ships (set `TWILIO_ACCOUNT_SID` and
+  `TWILIO_AUTH_TOKEN`); without them sends are recorded as dry runs. Other carriers plug in the same way
 - **Compliance**: STOP / UNSUBSCRIBE / START keywords, opt-out list enforced on send,
   quiet hours (no marketing texts 21:00–08:00 recipient local time)
 - **Rate limiting**: token bucket per number (default 1 msg/sec, burst 5)
