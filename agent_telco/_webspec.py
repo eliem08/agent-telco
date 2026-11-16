@@ -375,4 +375,24 @@ SPEC = {
             "id": "thread",
         },
     ],
+    "plans": [
+        {
+            "key": "starter",
+            "name": "Starter",
+            "price": "$29 per month + carrier fees",
+            "features": ["5 numbers", "Opt-out and quiet-hours compliance", "Inbound routing"],
+        },
+        {
+            "key": "growth",
+            "name": "Growth",
+            "price": "$149 per month + carrier fees",
+            "features": ["50 numbers", "Per-number rate limits", "Message threads"],
+        },
+        {
+            "key": "scale",
+            "name": "Scale",
+            "price": "$599 per month + carrier fees",
+            "features": ["Unlimited numbers", "Twilio delivery", "Priority support"],
+        },
+    ],
 }
