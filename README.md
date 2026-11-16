@@ -55,15 +55,18 @@ Buyers pick a plan on `/pricing`, pay on Stripe Checkout and see their API key o
 
 ## Pricing
 
-Every plan starts with a 14-day free trial. Prices in USD, billed monthly unless noted.
+Monthly plans start with a 14-day free trial. Prices in USD, billed monthly unless noted.
 
 | Plan | Price | Includes |
 |---|---|---|
 | **Starter** | $29 per month + carrier fees | 5 numbers; Opt-out and quiet-hours compliance; Inbound routing |
-| **Growth** | $149 per month + carrier fees | 50 numbers; Per-number rate limits; Message threads export |
-| **Scale** | $599 per month + carrier fees | Unlimited numbers; Compliance reports; Priority support |
+| **Growth** | $149 per month + carrier fees | 50 numbers; Per-number rate limits; Message threads |
+| **Scale** | $599 per month + carrier fees | Unlimited numbers; Twilio delivery; Priority support |
 
 To start a trial or buy a plan, [request access](https://github.com/eliem08/agent-telco/issues/new?title=Agent%20Telco%20trial&labels=sales).
+
+Plan note: every plan runs the same software, and every API key unlocks all of it. Seat, agent and volume
+limits are licence terms; the code does not enforce them. Support, SLA and done-for-you items are services.
 
 ## Licence
 
