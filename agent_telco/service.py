@@ -8,6 +8,7 @@ and every result says so, so nobody mistakes a dry run for a delivery.
 from __future__ import annotations
 
 import base64
+import contextlib
 import json
 import os
 import re
@@ -19,6 +20,31 @@ import urllib.request
 from .core import Carrier, Exchange, Message, TelcoError, TokenBucket
 
 E164 = re.compile(r"^\+[1-9]\d{6,14}$")
+FINAL = {"delivered", "undelivered", "failed", "read"}  # a late "sent" callback must not undo these
+
+
+@contextlib.contextmanager
+def store_lock(store: str, timeout: float = 10.0, stale: float = 60.0):
+    """One writer at a time: the CLI, the API and carrier webhooks all load, change and save the same file."""
+    lock = f"{store}.lock"
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            break
+        except FileExistsError:
+            with contextlib.suppress(OSError):
+                if time.time() - os.path.getmtime(lock) > stale:  # a crashed writer left it behind
+                    os.remove(lock)
+                    continue
+            if time.monotonic() > deadline:
+                raise TelcoError("the store is busy; try again") from None
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        with contextlib.suppress(OSError):
+            os.remove(lock)
 
 
 def check_number(n: str) -> str:
@@ -44,8 +70,8 @@ class DryRunCarrier(Carrier):
 class TwilioCarrier(Carrier):
     live = True
 
-    def __init__(self, sid: str, token: str, post=None):
-        self.sid, self.token = sid, token
+    def __init__(self, sid: str, token: str, post=None, status_callback: str = ""):
+        self.sid, self.token, self.status_callback = sid, token, status_callback
         self.post = post or self._post
 
     def _post(self, url: str, form: dict, auth: str) -> dict:
@@ -65,13 +91,18 @@ class TwilioCarrier(Carrier):
     def send_sms(self, frm, to, body):
         url = f"https://api.twilio.com/2010-04-01/Accounts/{self.sid}/Messages.json"
         auth = base64.b64encode(f"{self.sid}:{self.token}".encode()).decode()
-        return self.post(url, {"From": frm, "To": to, "Body": body}, auth)["sid"]
+        form = {"From": frm, "To": to, "Body": body}
+        if self.status_callback:  # Twilio reports delivered / failed here (see routes.py)
+            form["StatusCallback"] = self.status_callback
+        return self.post(url, form, auth)["sid"]
 
 
 def carrier_from_env(env=None) -> Carrier:
     env = os.environ if env is None else env
     sid, token = env.get("TWILIO_ACCOUNT_SID", ""), env.get("TWILIO_AUTH_TOKEN", "")
-    return TwilioCarrier(sid, token) if sid and token else DryRunCarrier()
+    public = env.get("PUBLIC_URL", "").rstrip("/")
+    callback = f"{public}/twilio/status" if public.startswith("https://") else ""
+    return TwilioCarrier(sid, token, status_callback=callback) if sid and token else DryRunCarrier()
 
 
 class Service:
@@ -122,15 +153,27 @@ class Service:
             raise TelcoError("message body is empty")
         return self.ex.send(agent, check_number(to), body, marketing, local_hour)
 
-    def receive(self, to: str, frm: str, body: str) -> dict:
+    def receive(self, to: str, frm: str, body: str, sid: str = "", confirm: bool = True) -> dict:
         to, frm = check_number(to), check_number(frm)
         if to not in self.ex.owner:
             raise TelcoError(f"{to} is not one of our provisioned numbers")
+        if sid and any(m.sid == sid for m in self.ex.threads.get((to, frm), [])):
+            return {"agent": self.ex.owner[to], "action": "duplicate", "otp": None}  # carrier retried
         was_out = (to, frm) in self.ex.opted_out
-        msg = self.ex.receive(to, frm, body)
+        msg = self.ex.receive(to, frm, body, sid=sid, confirm=confirm)
         now_out = (to, frm) in self.ex.opted_out
         action = "opt_out" if now_out and not was_out else "opt_in" if was_out and not now_out else msg.status
         return {"agent": self.ex.owner[to], "action": action, "otp": Exchange.extract_otp(body)}
+
+    def update_status(self, sid: str, status: str, error: str = "") -> bool:
+        """Apply a carrier delivery report to the message we sent. False if the sid is not ours."""
+        for msgs in self.ex.threads.values():
+            for m in msgs:
+                if m.sid == sid and m.direction == "out":
+                    if m.status not in FINAL or status in FINAL:
+                        m.status = f"{status} ({error})" if error and status in ("failed", "undelivered") else status
+                    return True
+        return False
 
     def save(self):
         ex = self.ex

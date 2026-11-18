@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import re
 import time
 from collections import defaultdict
@@ -112,26 +113,33 @@ class Exchange:
         self.threads[(num, to)].append(msg)
         return msg
 
-    def receive(self, to: str, frm: str, body: str) -> Message:
+    def receive(self, to: str, frm: str, body: str, sid: str = "", confirm: bool = True) -> Message:
+        """Record an inbound text. confirm=False when the carrier sends its own STOP/START replies (Twilio does)."""
         agent = self.owner.get(to)
-        msg = Message("in", to, frm, body, status="received")
+        msg = Message("in", to, frm, body, status="received", sid=sid)
         self.threads[(to, frm)].append(msg)
         # carriers honour "STOP.", "Stop please", "stop!!" - match the keyword, not the exact body
         words = re.findall(r"[a-z]+", body.lower())
         word = words[0] if words else ""
         if word in STOP_WORDS:
             self.opted_out.add((to, frm))
-            self.carrier.send_sms(to, frm, "You are unsubscribed. Reply START to resubscribe.")
+            self._confirm(confirm, to, frm, "You are unsubscribed. Reply START to resubscribe.")
             return msg
         if word in START_WORDS and (to, frm) in self.opted_out:
             self.opted_out.discard((to, frm))
-            self.carrier.send_sms(to, frm, "You are resubscribed.")
+            self._confirm(confirm, to, frm, "You are resubscribed.")
             return msg
         if agent and agent in self.handlers:
             self.handlers[agent](msg)
         else:
             msg.status = "unrouted"
         return msg
+
+    def _confirm(self, confirm: bool, frm: str, to: str, body: str):
+        if not confirm:
+            return
+        with contextlib.suppress(TelcoError):  # the opt-out is recorded; a failed confirmation must not lose it
+            self.carrier.send_sms(frm, to, body)
 
     def thread(self, agent: str, contact: str) -> list[Message]:
         return self.threads.get((self.numbers[agent], contact), [])

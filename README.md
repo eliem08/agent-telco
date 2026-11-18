@@ -85,6 +85,8 @@ Proprietary. Copyright (c) 2026 eliem08. All rights reserved. Use requires a pai
 - **Rate limiting**: token bucket per number (default 1 msg/sec, burst 5)
 - **Inbound routing** to the owning agent's handler (+ OTP code extraction helper)
 - Full conversation threads per (agent number, contact)
+- **Twilio webhooks** on the hosted server: incoming texts and delivery reports, each checked against
+  Twilio's request signature (see below)
 
 ## Quickstart
 
@@ -101,6 +103,34 @@ ex.receive(to=num, frm="+14155559999", body="Confirmed. Code 482913")
 ```bash
 agent-telco demo
 ```
+
+## Receiving texts from Twilio
+
+The hosted server (`agent-telco-web`) has two webhook endpoints for Twilio. They don't use API keys.
+Instead, every request must carry a valid `X-Twilio-Signature`, so a forged request can't
+opt someone out or slip a message into a thread.
+
+| Variable | Value |
+|---|---|
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | from the Twilio console; the token also verifies webhooks |
+| `PUBLIC_URL` | the server's https address, exactly as Twilio calls it, e.g. `https://telco.example.com` |
+
+Set up each number in Twilio under **Messaging > A message comes in > Webhook, HTTP POST** with
+`https://telco.example.com/twilio/inbound`.
+
+| Endpoint | What it does |
+|---|---|
+| `POST /twilio/inbound` | Puts the text in the agent's thread, records STOP and START, and ignores Twilio's retries of the same message |
+| `POST /twilio/status` | Updates each sent message to delivered, undelivered or failed (with Twilio's error code) |
+
+Sends include the status callback automatically once `PUBLIC_URL` is set. `agent-telco thread`
+shows each sent message's delivery state.
+
+Without `TWILIO_AUTH_TOKEN` and an https `PUBLIC_URL`, both endpoints answer 503 and change nothing.
+Twilio sends its own STOP and START confirmations, so agent-telco doesn't send a second one.
+
+The signature check reproduces Twilio's published example.
+These webhooks haven't yet run against a live Twilio account.
 
 ## Roadmap
 

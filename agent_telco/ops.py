@@ -3,7 +3,7 @@
 import os
 
 from .core import TelcoError
-from .service import Service
+from .service import Service, store_lock
 
 OPS = ("number-add", "provision", "release", "numbers", "send", "receive", "thread")
 
@@ -37,9 +37,10 @@ def add_ops(sub):
 
 def run_ops(a) -> int:
     try:
-        svc = Service(a.store)
-        code = _run(svc, a)
-        svc.save()
+        with store_lock(a.store):
+            svc = Service(a.store)
+            code = _run(svc, a)
+            svc.save()
         return code
     except TelcoError as e:
         print(f"refused: {e}")
@@ -77,7 +78,10 @@ def _run(svc: Service, a) -> int:
             raise TelcoError(f"agent {a.agent!r} has no number")
         msgs = ex.thread(a.agent, a.contact)
         for m in msgs:
-            print(f"{'>>' if m.direction == 'out' else '<<'} {m.body}")
+            print(
+                f"{'>>' if m.direction == 'out' else '<<'} {m.body}"
+                + (f"  [{m.status}]" if m.direction == "out" else "")
+            )
         if not msgs:
             print("no messages yet")
     return 0
